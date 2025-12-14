@@ -5,10 +5,10 @@ specialities:
     - icon: lightbulb
       text: Logo Design
       animation: fadeInDown
-    - icon: page-multiple
+    - icon: layer-group
       text: Branding 
       animation: fadeInUp
-    - icon: results
+    - icon: chart-line
       text: Minimal Web Design
       animation: fadeInLeft
 taxonomy:
