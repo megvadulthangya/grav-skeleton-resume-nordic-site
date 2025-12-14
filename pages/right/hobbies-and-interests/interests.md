@@ -1,31 +1,33 @@
+---
 title: Hobbies & Interests
-date: 13:34 02/21/2014 
+date: '13:34 02/21/2014'
 
 interests:
     - icon: camera
-      activity: Photography
+      text: Photography
       animation: fadeIn
     - icon: map-signs
-      activity: Hiking
-      animation: fadeIn  
+      text: Hiking
+      animation: fadeIn
     - icon: book
-      activity: Reading
-      animation: fadeIn   
+      text: Reading
+      animation: fadeIn
     - icon: music
-      activity: Music
-      animation: fadeIn   
+      text: Music
+      animation: fadeIn
     - icon: tree
-      activity: Walking
-      animation: fadeIn    
+      text: Walking
+      animation: fadeIn
     - icon: paw
-      activity: Dogs
-      animation: fadeIn    
+      text: Dogs
+      animation: fadeIn
     - icon: gamepad
-      activity: Games
-      animation: fadeIn  
+      text: Games
+      animation: fadeIn
     - icon: ticket
-      activity: Theatre
-      animation: fadeIn    
+      text: Theatre
+      animation: fadeIn
 
 taxonomy:
     category: right
+---
