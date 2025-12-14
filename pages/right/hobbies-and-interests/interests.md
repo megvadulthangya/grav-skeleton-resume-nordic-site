@@ -1,4 +1,3 @@
----
 title: Hobbies & Interests
 date: 13:34 02/21/2014 
 
@@ -6,7 +5,7 @@ interests:
     - icon: camera
       activity: Photography
       animation: fadeIn
-    - icon: mountains
+    - icon: map-signs
       activity: Hiking
       animation: fadeIn  
     - icon: book
@@ -15,20 +14,18 @@ interests:
     - icon: music
       activity: Music
       animation: fadeIn   
-    - icon: trees
+    - icon: tree
       activity: Walking
       animation: fadeIn    
     - icon: paw
       activity: Dogs
       animation: fadeIn    
-    - icon: die-six
+    - icon: gamepad
       activity: Games
       animation: fadeIn  
     - icon: ticket
       activity: Theatre
-      animation: fadeIn   
-
+      animation: fadeIn    
 
 taxonomy:
     category: right
----
