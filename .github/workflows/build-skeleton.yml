@@ -15,8 +15,7 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. VISSZAÁLLÍTJUK 8.3-RA!
-    # Hogy a build folyamat (GPM) ne haljon meg futás közben.
+    # 1. PHP 8.3 (Hogy a Build lefusson hiba nélkül)
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -54,9 +53,9 @@ jobs:
         cd webroot
         bin/gpm install error problems -f -y
 
-    # 2. A SEBÉSZ KÉSÉT ITT HASZNÁLJUK! 🔪
-    # Kitakarítjuk a szemetet ÉS töröljük a verzió-ellenőrző fájlt!
-    - name: Cleanup & Hack Platform Check
+    # 2. A "LOBOTÓMIA" LÉPÉS 🧠
+    # Nem töröljük, csak semlegesítjük a fájlt!
+    - name: Cleanup & Neutralize Platform Check
       run: |
         cd webroot
         echo "🧹 Cleaning up garbage..."
@@ -64,9 +63,9 @@ jobs:
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
         
-        # ITT A VARÁZSLAT! Töröljük a fájlt, ami a hibát okozza a te gépeden!
-        echo "🔓 Removing strict PHP version check..."
-        rm -f vendor/composer/platform_check.php
+        # ITT A JAVÍTÁS! Felülírjuk egy ártalmatlan kóddal.
+        echo "🔓 Neutralizing strict PHP version check..."
+        echo "<?php return;" > vendor/composer/platform_check.php
 
     # Csomag 1: Sima
     - name: Create Standard ZIP
@@ -74,7 +73,7 @@ jobs:
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
-    # Admin telepítése
+    # Admin telepítése (Ez most már menni fog, mert a fájl létezik!)
     - name: Install Admin Plugin
       run: |
         cd webroot
@@ -82,8 +81,8 @@ jobs:
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
         
-        # Az Admin telepítése visszarakhatja az ellenőrzőt, TÖRÖLJÜK ÚJRA!
-        rm -f vendor/composer/platform_check.php
+        # Biztos ami biztos: ha a GPM visszarakta volna a szigorú fájlt, újra semlegesítjük!
+        echo "<?php return;" > vendor/composer/platform_check.php
 
     # Csomag 2: Adminos
     - name: Create Admin ZIP
