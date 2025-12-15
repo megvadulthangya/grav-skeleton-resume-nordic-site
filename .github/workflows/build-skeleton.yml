@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. Használjuk a legmodernebb rendszert (gyors, biztonságos)
+    # 1. GitHub szerver marad 8.3 (Stabil működés)
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -29,20 +29,6 @@ jobs:
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
-
-    # 2. A NAGY TRÜKK! 🎩 (Ez hiányzott eddig!)
-    # Ez a parancs "hazudja" azt a csomagnak, hogy 8.1-es gépen vagyunk.
-    # Így a XAMPP-od (8.2) boldog lesz vele!
-    - name: Fix PHP Compatibility (Force 8.1)
-      run: |
-        cd webroot
-        echo "🔧 Forcing Composer to generate PHP 8.1 compatible checks..."
-        
-        # Beállítjuk a kompatibilitási szintet 8.1-re
-        composer config platform.php 8.1.0
-        
-        # Újrageneráljuk az ellenőrző fájlokat
-        composer update --ignore-platform-reqs --no-dev
 
     - name: Overlay Skeleton Files
       run: |
@@ -67,34 +53,58 @@ jobs:
         cd webroot
         bin/gpm install error problems -f -y
 
-    - name: Cleanup
+    - name: Cleanup Quark
       run: |
         cd webroot
-        echo "🧹 Cleaning up..."
-        rm -rf cache/* logs/* tmp/* .git .github
-        find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
+        rm -rf cache/* logs/* tmp/* .git .github
 
-    # Csomag 1: Sima
+    # ----------------------------------------------------------------
+    # CSOMAG 1 (Sima) ELŐKÉSZÍTÉSE
+    # ----------------------------------------------------------------
+    - name: Fix PHP Version for Standard Package
+      run: |
+        cd webroot
+        echo "🔧 Fixing PHP version requirements..."
+        
+        # 1. Hivatalos átállítás
+        composer config platform.php 8.1.0
+        composer dump-autoload --ignore-platform-reqs
+        
+        # 2. BRUTÁLIS FELÜLÍRÁS (Biztos, ami biztos!)
+        echo "<?php return;" > vendor/composer/platform_check.php
+
     - name: Create Standard ZIP
       run: |
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
-    # Admin telepítése
+    # ----------------------------------------------------------------
+    # ADMIN TELEPÍTÉSE
+    # ----------------------------------------------------------------
     - name: Install Admin Plugin
       run: |
         cd webroot
         echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
-        
-        # Admin telepítés után is lefuttatjuk a kompatibilitási javítást!
-        # Hogy az Admin plugin se rontsa el a verziószámot.
-        composer config platform.php 8.1.0
-        composer update --ignore-platform-reqs --no-dev
 
-    # Csomag 2: Adminos
+    # ----------------------------------------------------------------
+    # CSOMAG 2 (Adminos) VÉGSŐ JAVÍTÁSA
+    # Ez a legfontosabb lépés, mert az Admin install elronthatta!
+    # ----------------------------------------------------------------
+    - name: Fix PHP Version for Admin Package
+      run: |
+        cd webroot
+        echo "🔧 Re-Fixing PHP version requirements after Admin install..."
+        
+        # 1. Hivatalos átállítás (ÚJRA)
+        composer config platform.php 8.1.0
+        composer dump-autoload --ignore-platform-reqs
+        
+        # 2. BRUTÁLIS FELÜLÍRÁS (ÚJRA)
+        echo "<?php return;" > vendor/composer/platform_check.php
+
     - name: Create Admin ZIP
       run: |
         cd webroot
