@@ -58,25 +58,23 @@ jobs:
         cd webroot
         bin/gpm install error problems -f -y
 
-    # 7. Takarítás
+    # 7. Takarítás (ITT TÖRÖLJÜK A QUARKOT!)
     - name: Cleanup
       run: |
         cd webroot
+        echo "🧹 Cleaning up garbage and removing Quark theme..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
+        
+        # VISZLÁT QUARK! 👋
+        rm -rf user/themes/quark
 
-    # ---------------------------------------------------------
-    # 8. CSOMAG 1: SIMA VERZIÓ (JAVÍTVA: Nincs webroot mappa!)
-    # ---------------------------------------------------------
+    # 8. CSOMAG 1: SIMA VERZIÓ
     - name: Create Standard ZIP
       run: |
-        # Belépünk a mappába, és a tartalmát zipeljük a szülő könyvtárba (../)
-        cd webroot
-        zip -r ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
+        zip -r grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip webroot
 
-    # ---------------------------------------------------------
     # 9. ADMIN TELEPÍTÉSE
-    # ---------------------------------------------------------
     - name: Install Admin Plugin
       run: |
         cd webroot
@@ -84,16 +82,12 @@ jobs:
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
 
-    # ---------------------------------------------------------
-    # 10. CSOMAG 2: ADMINOS VERZIÓ (JAVÍTVA: Nincs webroot mappa!)
-    # ---------------------------------------------------------
+    # 10. CSOMAG 2: ADMINOS VERZIÓ
     - name: Create Admin ZIP
       run: |
-        # Belépünk a mappába, és a tartalmát zipeljük a szülő könyvtárba (../)
-        cd webroot
-        zip -r ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
+        zip -r grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip webroot
 
-    # 11. Mindkettő feltöltése
+    # 11. Feltöltés
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
