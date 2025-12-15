@@ -1,21 +1,29 @@
 title: Lars Nordmann
-description: Senior Systems Architect
+default_lang: en
 author:
   name: Lars Nordmann
-  email: 'demo@example.com'
+  email: demo@example.com
+taxonomies:
+  - category
+  - tag
 metadata:
-    description: 'Nord Resume is a clean, arctic-themed resume template for Grav CMS.'
-
-website: "nordic-skeleton.gshoots.hu"
-
-
+  description: 'Nord Resume is a clean, arctic-themed resume template for Grav CMS.'
+summary:
+  enabled: true
+  format: short
+  size: 300
+  delimiter: '==='
+redirects: null
+routes: null
+blog:
+  route: /blog
+description: 'Senior Systems Architect'
+website: "nordic-skeleton.demo"
 address:
-    - line: "123 Glacier Avenue"
-    - line: "Arctic Circle,"
-    - line: "Svalbard, 9170"
-
-
-contact: 
-    - line: "lars.nordmann@example.com"
-    - line: "+1 555-0199"
-    - line: "@lars_nord_demo"
+  - line: '123 Glacier Avenue'
+  - line: 'Arctic Circle,'
+  - line: 'Svalbard, 9170'
+contact:
+  - line: "lars.nordmann@example.com"
+  - line: "+1 555-0199"
+  - line: "@lars_nord_demo"
