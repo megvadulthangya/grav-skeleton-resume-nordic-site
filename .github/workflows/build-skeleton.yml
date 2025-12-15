@@ -1,40 +1,74 @@
-name: Build Skeleton
-
+name: Build Skeleton Package
 on:
-  release:
-    types: [ published ]
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Target tag for re-upload'     
+        description: 'Release Tag (pl. v1.0.0)'
         required: true
-        default: ''
-      version:
-        description: 'Which Grav release to use'
-        required: true
-        default: 'latest'
-      admin:
-        description: 'Create also a package with Admin'
-        required: true
-        default: true
+        default: 'v1.0.0'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v2
-      - name: Extract Tag
-        run: echo "SKELETON_VERSION=${{ github.event.inputs.tag || github.ref }}" >> $GITHUB_ENV
-      - name: Generate Skeleton Packages
-        uses: getgrav/skeleton-builder@v1
-        with:
-          version: ${{ github.event.inputs.version || 'latest' }}
-          admin: ${{ github.event.inputs.admin || true }}
-      - name: Upload packages to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.SKELETON_VERSION }}
-          file: dist/*.zip
-          overwrite: true
-          file_glob: true
+    # 1. Kód letöltése (A Skeleton repo)
+    - name: Checkout Skeleton Code
+      uses: actions/checkout@v4
+
+    # 2. PHP 8.3 beállítása (EZ A LÉNYEG! Ez javítja a hibát!)
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mbstring, intl, gd, xml, zip
+
+    # 3. Grav Admin letöltése és kicsomagolása
+    - name: Download & Install Grav
+      run: |
+        echo "⬇️ Downloading latest Grav + Admin..."
+        wget -q -O grav-admin.zip https://getgrav.org/download/core/grav-admin/latest
+        unzip -q grav-admin.zip
+        mv grav-admin webroot
+        rm grav-admin.zip
+
+    # 4. A Skeleton fájlok rámásolása a Grav-ra
+    - name: Overlay Skeleton Files
+      run: |
+        echo "📂 Copying skeleton files into Grav..."
+        cp -r user/* webroot/user/
+        cp .dependencies webroot/
+        
+        # Ha van gyökér config mappa, azt is
+        if [ -d "config" ]; then
+          mkdir -p webroot/user/config
+          cp -r config/* webroot/user/config/
+        fi
+
+    # 5. Téma telepítése a .dependencies alapján
+    - name: Install Dependencies & Theme
+      run: |
+        cd webroot
+        echo "📦 Installing plugins and theme via GPM..."
+        bin/gpm install -f -y
+
+    # 6. Takarítás (Cache, Logok, Git)
+    - name: Cleanup
+      run: |
+        cd webroot
+        rm -rf cache/* logs/* tmp/* .git .github
+        find . -name ".git" -type d -exec rm -rf {} +
+
+    # 7. Csomagolás (ZIP)
+    - name: Create ZIP Package
+      run: |
+        zip -r grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip webroot
+
+    # 8. Feltöltés a Release oldalra
+    - name: Upload to Release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ inputs.tag }}
+        file: grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip
+        overwrite: true
