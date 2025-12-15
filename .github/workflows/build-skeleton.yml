@@ -27,7 +27,6 @@ jobs:
     - name: Download Grav Core
       run: |
         echo "⬇️ Downloading Grav Core (No Admin)..."
-        # Itt a sima 'grav' csomagot szedjük, nem a grav-admin-t
         wget -q -O grav.zip https://getgrav.org/download/core/grav/latest
         unzip -q grav.zip
         mv grav webroot
@@ -53,13 +52,13 @@ jobs:
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
         rm -rf webroot/user/themes/resume-nordic/.git
 
-    # 6. Alap pluginok telepítése (Error, Problems)
+    # 6. Alap pluginok telepítése
     - name: Install Standard Plugins
       run: |
         cd webroot
         bin/gpm install error problems -f -y
 
-    # 7. Takarítás (Előkészület az első ZIP-hez)
+    # 7. Takarítás
     - name: Cleanup
       run: |
         cd webroot
@@ -67,31 +66,32 @@ jobs:
         find . -name ".git" -type d -exec rm -rf {} +
 
     # ---------------------------------------------------------
-    # 8. CSOMAG 1: SIMA VERZIÓ (Admin nélkül)
+    # 8. CSOMAG 1: SIMA VERZIÓ (JAVÍTVA: Nincs webroot mappa!)
     # ---------------------------------------------------------
     - name: Create Standard ZIP
       run: |
-        # Ez lesz a sima grav-skeleton-resume-nordic-site-v1.0.0.zip
-        zip -r grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip webroot
+        # Belépünk a mappába, és a tartalmát zipeljük a szülő könyvtárba (../)
+        cd webroot
+        zip -r ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
     # ---------------------------------------------------------
-    # 9. ADMIN TELEPÍTÉSE (Rárakjuk a meglévőre)
+    # 9. ADMIN TELEPÍTÉSE
     # ---------------------------------------------------------
     - name: Install Admin Plugin
       run: |
         cd webroot
         echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
-        # Újra kitakarítjuk a cache-t, amit a telepítés csinált
         rm -rf cache/* logs/* tmp/*
 
     # ---------------------------------------------------------
-    # 10. CSOMAG 2: ADMINOS VERZIÓ
+    # 10. CSOMAG 2: ADMINOS VERZIÓ (JAVÍTVA: Nincs webroot mappa!)
     # ---------------------------------------------------------
     - name: Create Admin ZIP
       run: |
-        # Ez lesz a grav-skeleton-resume-nordic-site+admin-v1.0.0.zip
-        zip -r grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip webroot
+        # Belépünk a mappába, és a tartalmát zipeljük a szülő könyvtárba (../)
+        cd webroot
+        zip -r ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
     # 11. Mindkettő feltöltése
     - name: Upload to Release
@@ -99,7 +99,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ inputs.tag }}
-        # A csillag (*) miatt mindkét zip fájlt feltölti!
         file: grav-skeleton-resume-nordic-site*.zip
         overwrite: true
         file_glob: true
