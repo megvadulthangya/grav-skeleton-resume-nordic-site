@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. PHP 8.3 (Hogy a Build lefusson hiba nélkül)
+    # 1. PHP 8.3 (A modern szabvány)
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -53,19 +53,13 @@ jobs:
         cd webroot
         bin/gpm install error problems -f -y
 
-    # 2. A "LOBOTÓMIA" LÉPÉS 🧠
-    # Nem töröljük, csak semlegesítjük a fájlt!
-    - name: Cleanup & Neutralize Platform Check
+    - name: Cleanup
       run: |
         cd webroot
         echo "🧹 Cleaning up garbage..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
-        
-        # ITT A JAVÍTÁS! Felülírjuk egy ártalmatlan kóddal.
-        echo "🔓 Neutralizing strict PHP version check..."
-        echo "<?php return;" > vendor/composer/platform_check.php
 
     # Csomag 1: Sima
     - name: Create Standard ZIP
@@ -73,16 +67,13 @@ jobs:
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
-    # Admin telepítése (Ez most már menni fog, mert a fájl létezik!)
+    # Admin telepítése
     - name: Install Admin Plugin
       run: |
         cd webroot
         echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
-        
-        # Biztos ami biztos: ha a GPM visszarakta volna a szigorú fájlt, újra semlegesítjük!
-        echo "<?php return;" > vendor/composer/platform_check.php
 
     # Csomag 2: Adminos
     - name: Create Admin ZIP
