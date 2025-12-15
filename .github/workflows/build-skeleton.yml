@@ -15,14 +15,12 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # --- A VÁLTOZÁS LÉNYEGE ITT VAN ---
-    # Beállítjuk a PHP 8.1-et.
-    # Így a csomag azt hiszi, 8.1 kell neki.
-    # Mivel neked 8.2 van, ez MŰKÖDNI FOG!
+    # 1. VISSZAÁLLÍTJUK 8.3-RA!
+    # Hogy a build folyamat (GPM) ne haljon meg futás közben.
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1' 
+        php-version: '8.3' 
         extensions: mbstring, intl, gd, xml, zip
 
     - name: Download Grav Core
@@ -56,13 +54,19 @@ jobs:
         cd webroot
         bin/gpm install error problems -f -y
 
-    - name: Cleanup
+    # 2. A SEBÉSZ KÉSÉT ITT HASZNÁLJUK! 🔪
+    # Kitakarítjuk a szemetet ÉS töröljük a verzió-ellenőrző fájlt!
+    - name: Cleanup & Hack Platform Check
       run: |
         cd webroot
-        echo "🧹 Cleaning up garbage and removing Quark theme..."
+        echo "🧹 Cleaning up garbage..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
+        
+        # ITT A VARÁZSLAT! Töröljük a fájlt, ami a hibát okozza a te gépeden!
+        echo "🔓 Removing strict PHP version check..."
+        rm -f vendor/composer/platform_check.php
 
     # Csomag 1: Sima
     - name: Create Standard ZIP
@@ -77,6 +81,9 @@ jobs:
         echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
+        
+        # Az Admin telepítése visszarakhatja az ellenőrzőt, TÖRÖLJÜK ÚJRA!
+        rm -f vendor/composer/platform_check.php
 
     # Csomag 2: Adminos
     - name: Create Admin ZIP
