@@ -1,4 +1,3 @@
-
 name: Build Skeleton Package
 on:
   workflow_dispatch:
@@ -13,18 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Kód letöltése
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 2. PHP 8.3 beállítása
+    # --- A VÁLTOZÁS LÉNYEGE ITT VAN ---
+    # Beállítjuk a PHP 8.1-et.
+    # Így a csomag azt hiszi, 8.1 kell neki.
+    # Mivel neked 8.2 van, ez MŰKÖDNI FOG!
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3'
+        php-version: '8.1' 
         extensions: mbstring, intl, gd, xml, zip
 
-    # 3. Grav Core (Admin NÉLKÜL) letöltése
     - name: Download Grav Core
       run: |
         echo "⬇️ Downloading Grav Core (No Admin)..."
@@ -33,7 +33,6 @@ jobs:
         mv grav webroot
         rm grav.zip
 
-    # 4. Skeleton fájlok másolása
     - name: Overlay Skeleton Files
       run: |
         echo "📂 Copying skeleton files into Grav..."
@@ -46,20 +45,17 @@ jobs:
             cp .dependencies webroot/
         fi
 
-    # 5. Téma MANUÁLIS telepítése (Git Clone)
     - name: Install Nord Theme Manually
       run: |
         echo "🎨 Cloning Nord Resume Theme..."
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
         rm -rf webroot/user/themes/resume-nordic/.git
 
-    # 6. Alap pluginok telepítése
     - name: Install Standard Plugins
       run: |
         cd webroot
         bin/gpm install error problems -f -y
 
-    # 7. Takarítás (Quark törlése)
     - name: Cleanup
       run: |
         cd webroot
@@ -68,16 +64,13 @@ jobs:
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
 
-    # ---------------------------------------------------------
-    # 8. CSOMAG 1: SIMA VERZIÓ (JAVÍTVA: Nincs webroot mappa!)
-    # ---------------------------------------------------------
+    # Csomag 1: Sima
     - name: Create Standard ZIP
       run: |
-        # Bemegyünk a mappába, és onnan csomagolunk kifelé (../)
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
-    # 9. ADMIN TELEPÍTÉSE
+    # Admin telepítése
     - name: Install Admin Plugin
       run: |
         cd webroot
@@ -85,16 +78,12 @@ jobs:
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
 
-    # ---------------------------------------------------------
-    # 10. CSOMAG 2: ADMINOS VERZIÓ (JAVÍTVA: Nincs webroot mappa!)
-    # ---------------------------------------------------------
+    # Csomag 2: Adminos
     - name: Create Admin ZIP
       run: |
-        # Bemegyünk a mappába, és onnan csomagolunk kifelé (../)
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
-    # 11. Feltöltés
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
