@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. PHP 8.3-at használunk! (Hogy NE kapd meg a fenti hibát többé)
+    # 1. Használjuk a legmodernebb rendszert (gyors, biztonságos)
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -24,19 +24,25 @@ jobs:
 
     - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading Grav Core (No Admin)..."
+        echo "⬇️ Downloading Grav Core..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/latest
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
 
-    # 2. AZONNALI LOBOTÓMIA 🧠
-    # Mielőtt bármit csinálnánk, felülírjuk az ellenőrzőt, hogy kussoljon.
-    # Nem töröljük (mert az hibát okoz), hanem kiürítjük!
-    - name: Neutralize PHP Check Early
+    # 2. A NAGY TRÜKK! 🎩 (Ez hiányzott eddig!)
+    # Ez a parancs "hazudja" azt a csomagnak, hogy 8.1-es gépen vagyunk.
+    # Így a XAMPP-od (8.2) boldog lesz vele!
+    - name: Fix PHP Compatibility (Force 8.1)
       run: |
-        echo "🔓 Neutralizing platform check..."
-        echo "<?php return;" > webroot/vendor/composer/platform_check.php
+        cd webroot
+        echo "🔧 Forcing Composer to generate PHP 8.1 compatible checks..."
+        
+        # Beállítjuk a kompatibilitási szintet 8.1-re
+        composer config platform.php 8.1.0
+        
+        # Újrageneráljuk az ellenőrző fájlokat
+        composer update --ignore-platform-reqs --no-dev
 
     - name: Overlay Skeleton Files
       run: |
@@ -68,9 +74,6 @@ jobs:
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
-        
-        # BIZTOSÍTÁS: Újra felülírjuk, ha a GPM véletlenül visszaállította volna
-        echo "<?php return;" > vendor/composer/platform_check.php
 
     # Csomag 1: Sima
     - name: Create Standard ZIP
@@ -86,8 +89,10 @@ jobs:
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
         
-        # BIZTOSÍTÁS 2: Admin telepítés után is semlegesítünk!
-        echo "<?php return;" > vendor/composer/platform_check.php
+        # Admin telepítés után is lefuttatjuk a kompatibilitási javítást!
+        # Hogy az Admin plugin se rontsa el a verziószámot.
+        composer config platform.php 8.1.0
+        composer update --ignore-platform-reqs --no-dev
 
     # Csomag 2: Adminos
     - name: Create Admin ZIP
