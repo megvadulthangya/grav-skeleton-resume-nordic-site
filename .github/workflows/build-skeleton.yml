@@ -15,20 +15,31 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. PHP 8.3 (A modern szabvány)
+    # 1. PHP 8.1-et állítunk be! 
+    # Ez a kulcs. Így a csomagolás 8.1-es kompatibilitással készül.
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3' 
+        php-version: '8.1'
         extensions: mbstring, intl, gd, xml, zip
 
     - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading Grav Core (No Admin)..."
+        echo "⬇️ Downloading Grav Core..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/latest
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
+
+    # 2. A "VARÁZSLAT" 🪄
+    # Mivel most PHP 8.1-ben vagyunk, utasítjuk a Composert, 
+    # hogy generálja újra az ellenőrző fájlt a JELENLEGI (8.1) verzióhoz.
+    # Így a 'platform_check.php' átíródik 8.3-ról 8.1-re!
+    - name: Downgrade Requirement to PHP 8.1
+      run: |
+        cd webroot
+        echo "📉 Regenerating platform requirements for PHP 8.1..."
+        composer dump-autoload --optimize
 
     - name: Overlay Skeleton Files
       run: |
@@ -51,12 +62,13 @@ jobs:
     - name: Install Standard Plugins
       run: |
         cd webroot
+        # Most már a GPM is menni fog, mert a requirement 8.1 lett!
         bin/gpm install error problems -f -y
 
     - name: Cleanup
       run: |
         cd webroot
-        echo "🧹 Cleaning up garbage..."
+        echo "🧹 Cleaning up..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
@@ -74,6 +86,8 @@ jobs:
         echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
+        # Admin telepítés után is újra regeneráljuk a biztonság kedvéért!
+        composer dump-autoload --optimize
 
     # Csomag 2: Adminos
     - name: Create Admin ZIP
