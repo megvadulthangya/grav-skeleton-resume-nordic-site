@@ -12,27 +12,28 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    # 1. Kód letöltése
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. GitHub szerver marad 8.3 (Stabil működés)
+    # 2. Modern PHP 8.3 (Gyors és stabil építéshez)
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3' 
         extensions: mbstring, intl, gd, xml, zip
 
+    # 3. Grav letöltése (Ugyanaz, mint az entrypoint.sh-ban)
     - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading Grav Core..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/latest
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
 
+    # 4. Skeleton fájlok másolása (Mint a cp -Rf user a scriptben)
     - name: Overlay Skeleton Files
       run: |
-        echo "📂 Copying skeleton files into Grav..."
         for dir in pages themes plugins config assets data accounts; do
           if [ -d "$dir" ]; then
             cp -r "$dir" webroot/user/
@@ -42,36 +43,34 @@ jobs:
             cp .dependencies webroot/
         fi
 
+    # 5. Téma telepítése
     - name: Install Nord Theme Manually
       run: |
-        echo "🎨 Cloning Nord Resume Theme..."
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
         rm -rf webroot/user/themes/resume-nordic/.git
 
+    # 6. Pluginok telepítése
     - name: Install Standard Plugins
       run: |
         cd webroot
         bin/gpm install error problems -f -y
 
-    - name: Cleanup Quark
+    # 7. Takarítás (Mint a script végén)
+    - name: Cleanup
       run: |
         cd webroot
-        rm -rf user/themes/quark
         rm -rf cache/* logs/* tmp/* .git .github
+        find . -name ".git" -type d -exec rm -rf {} +
+        rm -rf user/themes/quark
 
-    # ----------------------------------------------------------------
-    # CSOMAG 1 (Sima) ELŐKÉSZÍTÉSE
-    # ----------------------------------------------------------------
-    - name: Fix PHP Version for Standard Package
+    # -----------------------------------------------------------
+    # 💥 A NAGY TRÜKK - CSOMAG 1 ELŐTT 💥
+    # -----------------------------------------------------------
+    - name: NUKE Platform Check (Standard)
       run: |
         cd webroot
-        echo "🔧 Fixing PHP version requirements..."
-        
-        # 1. Hivatalos átállítás
-        composer config platform.php 8.1.0
-        composer dump-autoload --ignore-platform-reqs
-        
-        # 2. BRUTÁLIS FELÜLÍRÁS (Biztos, ami biztos!)
+        echo "☢️ Felülírjuk az ellenőrző fájlt..."
+        # Ez a parancs kiüríti a fájlt. Ha üres, nincs hibaüzenet!
         echo "<?php return;" > vendor/composer/platform_check.php
 
     - name: Create Standard ZIP
@@ -79,30 +78,23 @@ jobs:
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
-    # ----------------------------------------------------------------
+    # -----------------------------------------------------------
     # ADMIN TELEPÍTÉSE
-    # ----------------------------------------------------------------
+    # -----------------------------------------------------------
     - name: Install Admin Plugin
       run: |
         cd webroot
-        echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
 
-    # ----------------------------------------------------------------
-    # CSOMAG 2 (Adminos) VÉGSŐ JAVÍTÁSA
-    # Ez a legfontosabb lépés, mert az Admin install elronthatta!
-    # ----------------------------------------------------------------
-    - name: Fix PHP Version for Admin Package
+    # -----------------------------------------------------------
+    # 💥 A NAGY TRÜKK - CSOMAG 2 ELŐTT (ÚJRA!) 💥
+    # -----------------------------------------------------------
+    # Azért kell újra, mert a 'bin/gpm install admin' visszarakhatta a rossz fájlt!
+    - name: NUKE Platform Check (Admin)
       run: |
         cd webroot
-        echo "🔧 Re-Fixing PHP version requirements after Admin install..."
-        
-        # 1. Hivatalos átállítás (ÚJRA)
-        composer config platform.php 8.1.0
-        composer dump-autoload --ignore-platform-reqs
-        
-        # 2. BRUTÁLIS FELÜLÍRÁS (ÚJRA)
+        echo "☢️ Felülírjuk az ellenőrző fájlt ÚJRA..."
         echo "<?php return;" > vendor/composer/platform_check.php
 
     - name: Create Admin ZIP
@@ -110,6 +102,7 @@ jobs:
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
+    # Feltöltés
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
