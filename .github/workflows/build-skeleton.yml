@@ -12,18 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Kód letöltése (A Skeleton repo)
+    # 1. Kód letöltése
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 2. PHP 8.3 beállítása (EZ A LÉNYEG! Ez javítja a hibát!)
+    # 2. PHP 8.3 beállítása
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
         extensions: mbstring, intl, gd, xml, zip
 
-    # 3. Grav Admin letöltése és kicsomagolása
+    # 3. Grav Admin letöltése
     - name: Download & Install Grav
       run: |
         echo "⬇️ Downloading latest Grav + Admin..."
@@ -32,39 +32,44 @@ jobs:
         mv grav-admin webroot
         rm grav-admin.zip
 
-    # 4. A Skeleton fájlok rámásolása a Grav-ra
+    # 4. A Te Skeleton fájljaid bemásolása (JAVÍTVA!)
     - name: Overlay Skeleton Files
       run: |
         echo "📂 Copying skeleton files into Grav..."
-        cp -r user/* webroot/user/
-        cp .dependencies webroot/
         
-        # Ha van gyökér config mappa, azt is
-        if [ -d "config" ]; then
-          mkdir -p webroot/user/config
-          cp -r config/* webroot/user/config/
+        # Mivel nálad a gyökérben vannak a mappák, egyesével másoljuk őket a helyükre
+        for dir in pages themes plugins config assets data accounts; do
+          if [ -d "$dir" ]; then
+            echo "Copying $dir..."
+            cp -r "$dir" webroot/user/
+          fi
+        done
+        
+        # A .dependencies fájl másolása
+        if [ -f ".dependencies" ]; then
+            cp .dependencies webroot/
         fi
 
-    # 5. Téma telepítése a .dependencies alapján
+    # 5. Téma telepítése
     - name: Install Dependencies & Theme
       run: |
         cd webroot
         echo "📦 Installing plugins and theme via GPM..."
         bin/gpm install -f -y
 
-    # 6. Takarítás (Cache, Logok, Git)
+    # 6. Takarítás
     - name: Cleanup
       run: |
         cd webroot
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
 
-    # 7. Csomagolás (ZIP)
+    # 7. Csomagolás
     - name: Create ZIP Package
       run: |
         zip -r grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip webroot
 
-    # 8. Feltöltés a Release oldalra
+    # 8. Feltöltés
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
