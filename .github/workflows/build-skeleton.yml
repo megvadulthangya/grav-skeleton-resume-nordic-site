@@ -23,26 +23,25 @@ jobs:
         php-version: '8.3'
         extensions: mbstring, intl, gd, xml, zip
 
-    # 3. Grav Admin letöltése
-    - name: Download & Install Grav
+    # 3. Grav Core (Admin NÉLKÜL) letöltése
+    - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading latest Grav + Admin..."
-        wget -q -O grav-admin.zip https://getgrav.org/download/core/grav-admin/latest
-        unzip -q grav-admin.zip
-        mv grav-admin webroot
-        rm grav-admin.zip
+        echo "⬇️ Downloading Grav Core (No Admin)..."
+        # Itt a sima 'grav' csomagot szedjük, nem a grav-admin-t
+        wget -q -O grav.zip https://getgrav.org/download/core/grav/latest
+        unzip -q grav.zip
+        mv grav webroot
+        rm grav.zip
 
     # 4. Skeleton fájlok másolása
     - name: Overlay Skeleton Files
       run: |
         echo "📂 Copying skeleton files into Grav..."
-        # Mappák másolása
         for dir in pages themes plugins config assets data accounts; do
           if [ -d "$dir" ]; then
             cp -r "$dir" webroot/user/
           fi
         done
-        # .dependencies másolása
         if [ -f ".dependencies" ]; then
             cp .dependencies webroot/
         fi
@@ -50,37 +49,57 @@ jobs:
     # 5. Téma MANUÁLIS telepítése (Git Clone)
     - name: Install Nord Theme Manually
       run: |
-        echo "🎨 Cloning Nord Resume Theme from GitHub..."
-        # Direktben a GitHubról húzzuk le a helyére (develop ág)
+        echo "🎨 Cloning Nord Resume Theme..."
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
-        # Töröljük a .git mappát, hogy tiszta legyen
         rm -rf webroot/user/themes/resume-nordic/.git
 
-    # 6. Hivatalos pluginok telepítése GPM-mel (KONKRÉT NEVEKKEL!)
+    # 6. Alap pluginok telepítése (Error, Problems)
     - name: Install Standard Plugins
       run: |
         cd webroot
-        echo "📦 Installing standard plugins (Error, Problems)..."
-        # Itt javítottuk a hibát: megadjuk a neveket!
         bin/gpm install error problems -f -y
 
-    # 7. Takarítás
+    # 7. Takarítás (Előkészület az első ZIP-hez)
     - name: Cleanup
       run: |
         cd webroot
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
 
-    # 8. Csomagolás
-    - name: Create ZIP Package
+    # ---------------------------------------------------------
+    # 8. CSOMAG 1: SIMA VERZIÓ (Admin nélkül)
+    # ---------------------------------------------------------
+    - name: Create Standard ZIP
       run: |
+        # Ez lesz a sima grav-skeleton-resume-nordic-site-v1.0.0.zip
         zip -r grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip webroot
 
-    # 9. Feltöltés
+    # ---------------------------------------------------------
+    # 9. ADMIN TELEPÍTÉSE (Rárakjuk a meglévőre)
+    # ---------------------------------------------------------
+    - name: Install Admin Plugin
+      run: |
+        cd webroot
+        echo "➕ Installing Admin Panel..."
+        bin/gpm install admin -f -y
+        # Újra kitakarítjuk a cache-t, amit a telepítés csinált
+        rm -rf cache/* logs/* tmp/*
+
+    # ---------------------------------------------------------
+    # 10. CSOMAG 2: ADMINOS VERZIÓ
+    # ---------------------------------------------------------
+    - name: Create Admin ZIP
+      run: |
+        # Ez lesz a grav-skeleton-resume-nordic-site+admin-v1.0.0.zip
+        zip -r grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip webroot
+
+    # 11. Mindkettő feltöltése
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ inputs.tag }}
-        file: grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip
+        # A csillag (*) miatt mindkét zip fájlt feltölti!
+        file: grav-skeleton-resume-nordic-site*.zip
         overwrite: true
+        file_glob: true
