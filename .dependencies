@@ -7,9 +7,9 @@ git:
         url: https://github.com/getgrav/grav-plugin-problems
         path: user/plugins/problems
         branch: develop
-    resume:
+    resume-nordic:
         url: https://github.com/megvadulthangya/grav-theme-resume-nordic
-        path: user/themes/resume
+        path: user/themes/resume-nordic
         branch: develop
 links:
     error:
@@ -20,7 +20,7 @@ links:
         src: grav-plugin-problems
         path: user/plugins/problems
         scm: github
-    resume:
-        src: grav-theme-resume
-        path: user/themes/resume
+    resume-nordic:
+        src: grav-theme-resume-nordic
+        path: user/themes/resume-nordic
         scm: github

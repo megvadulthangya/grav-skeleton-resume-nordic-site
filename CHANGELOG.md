@@ -1,17 +1,9 @@
-# v1.1.1
-## mm/dd/2021
+# # v1.0.0
+## 12/15/2025
 
 1. [](#new)
-   * Created missing `accounts` folder
-
-# v1.1.0
-## 18/11/2015
-
-1. [](#new)
-    * Printing layout
-    
-# v1.0.0
-## 10/05/2015
-
-1. [](#new)
-    * ChangeLog started...
+    * **Initial Release of Nord Resume Skeleton**
+    * Includes the new **Nord Resume Theme** (v1.0.0) by default
+    * Updated demo content (`.md` files) to use **FontAwesome 7** icon names
+    * Updated `site.yaml` with safe demo data
+    * Configured dependencies to pull from the new repositories

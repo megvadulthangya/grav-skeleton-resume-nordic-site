@@ -1,18 +1,21 @@
-title: Leo C. Wilhoit
-description: Graphic & Web Designer
+title: Lars Nordmann
+description: Senior Systems Architect
 author:
-  name: Team Grav
-  email: 'joe@test.com'
+  name: Lars Nordmann
+  email: 'demo@example.com'
 metadata:
-    description: 'Resume is a free and responsive theme for **Grav**. Its a port of Resume template by HTML5UP.'
+    description: 'Nord Resume is a clean, arctic-themed resume template for Grav CMS.'
 
-website: "getgrav.org"
+website: "nordic-skeleton.gshoots.hu"
+
 
 address:
-    - line: "811 Margaret Street"
-    - line: "28015,"
-    - line: "Sugar Land, TX 77478"
+    - line: "123 Glacier Avenue"
+    - line: "Arctic Circle,"
+    - line: "Svalbard, 9170"
+
+
 contact: 
-    - line: "LeoCWilhoit@jourrapide.com"
-    - line: "+34 713-902-8117"
-    - line: "@LeoCWilhoit"
+    - line: "lars.nordmann@example.com"
+    - line: "+1 555-0199"
+    - line: "@lars_nord_demo"

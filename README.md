@@ -1,58 +1,62 @@
-# Resume Skeleton for Grav
+# Nord Resume Skeleton for Grav
 
-![Resume](assets/readme_1.png)
+![Nord Resume](assets/readme_1.png)
 
-Resume by [Fernando Báez](https://www.behance.net/gallery/FREE-Resume-Template/15677411) is a Grav implementation of free PSD resume theme.
+**Nord Resume** is a modern, privacy-focused adaptation of the classic Grav Resume theme. It has been completely overhauled with the [Nord color palette](https://www.nordtheme.com/), automatic Dark/Light mode, and FontAwesome 7 icons.
 
 # Features
 
-* Extraordinary resume theme, designed by [Fernando Báez](https://www.behance.net/gallery/FREE-Resume-Template/15677411)
-* Based on Foundation framework
-* Two-Column approach
-* Specialities layout with custom icons and descriptions
-* Design Skills layout with percentage grid
-* Language Skills layout with automatic pie charts
-* Education history special layout
-* Experience layout
-* Recognitions layout with SVG ribbon
-* Hobbies & Interests layout with custom icons and descriptions
-* Foundation Icon Fonts 3 (around 283 icons included)
-* Animate.css support in layouts. You can animate each separate element.
-* Fully responsive. Designed with mobile first approach.
+* ❄️ **Nord Color Palette:** Elegant, stress-free colors (Polar Night, Snow Storm, Frost, Aurora).
+* 🌓 **Auto Dark/Light Mode:** Automatically adapts to your system preferences (`prefers-color-scheme`).
+* 🚀 **FontAwesome 7:** Upgraded icon system (v7.1.0) using local assets (no external tracking/CDN issues).
+* 🔧 **Configurable:** Gravatar size, toggles, and footer text are editable via Admin Panel.
+* 📱 **Fully Responsive:** Mobile-first approach based on the Foundation framework.
+* **Classic Layouts:** Includes all the beloved layouts from the original theme (Specialities, Skills, Experience, Education).
 
-## Basic Setup for a new Grav site
+## Basic Setup
 
-The simplest way to install Resume theme for Grav is to download and install the Resume Skeleton package:
+The simplest way to install Nord Resume is to download the Skeleton package (which includes Grav + Theme + Content):
 
-1. [Download Resume Skeleton](http://getgrav.org/downloads/skeletons#extras)
-2. Simply unzip the package into your web root folder.
-3. Point your browser at the folder, job done!
+1. Go to the [Releases page](https://github.com/megvadulthangya/grav-skeleton-resume-nordic-site/releases).
+2. Download the latest `.zip` package.
+3. Unzip the package into your web root folder (e.g. `/var/www/html`).
+4. Point your browser at the folder, job done!
 
-**TIP:** Check out the [general Grav installation instructions](http://learn.getgrav.org/basics/installation) for more details on this process.
+**TIP:** Check out the [general Grav installation instructions](http://learn.getgrav.org/basics/installation) for more details.
 
 ---
 
 ## Existing Grav site
 
-It is possible to install just the theme, but page content will need to reference the [Resume theme](https://github.com/getgrav/grav-theme-resume)'s supported templates.  It is strongly advised to at least install the Resume Skeleton package to see the theme's capabilities in action.
+If you already have a Grav site, you can install just the theme:
 
-To install  **just** the theme:
+```bash
+git clone [https://github.com/megvadulthangya/grav-theme-resume-nordic.git](https://github.com/megvadulthangya/grav-theme-resume-nordic.git) user/themes/resume-nordic
+````
 
-```
-$ bin/gpm install resume
+Then enable it in your `user/config/system.yaml`:
+
+```yaml
+pages:
+  theme: resume-nordic
 ```
 
 # Layouts Configuration
 
-Resume theme includes few creative layout templates. This layouts will help you to create perfect resume and to find a dream job :) Below, is a brief description of most important layouts, it's options and values. 
+Nord Resume includes creative layout templates to help you create the perfect CV. Below is a description of the most important layouts and options.
 
-## Header
+## Header & Contact
 
-Header settings are located inside your [skeleton](https://github.com/getgrav/grav-skeleton-resume-site) in  **config/site.yaml**. This file contains your basic contact informations. This content will be displayed in theme header. 
+Header settings are located inside **user/config/site.yaml**. This file contains your basic contact information, address, and profile settings.
+
+To change your profile picture, you can either:
+
+1.  Use your Gravatar email in `site.yaml`.
+2.  Configure the size and visibility in the **Admin Panel \> Themes \> Nord Resume**.
 
 ## Specialities
 
-Specialities layout is designed to showcase your most important talents. It contains large icon inside ellipse and description. Example of specialities layout is located inside your [skeleton](https://github.com/getgrav/grav-skeleton-resume-site) in **pages/left/my-specialities/special.md**. 
+Specialities layout is designed to showcase your most important talents. It contains a large icon inside a circle. Example location: **pages/left/my-specialities/special.md**.
 
 ```markdown
 - icon: lightbulb
@@ -60,38 +64,38 @@ Specialities layout is designed to showcase your most important talents. It cont
   animation: fadeInDown
 ```
 
-* **icon** - select icon from around 300 included font icons. Icon list is available [here](http://zurb.com/playground/foundation-icon-fonts-3).
-* **text** - description of your speciality.
-* **animation** - you can animate each element. Check available animations [here](https://daneden.github.io/animate.css/).
+  * **icon**: Select any free icon from [FontAwesome 7](https://fontawesome.com/search?o=r&m=free). Use the class name without `fa-` prefix (e.g. `lightbulb`, `layer-group`, `chart-line`).
+  * **text**: Description of your speciality.
+  * **animation**: Animate elements using [Animate.css](https://daneden.github.io/animate.css/) classes.
 
 ## Skills
 
-Skills layout is designed to showcase your most important skills. To check example page, go to [skeleton](https://github.com/getgrav/grav-skeleton-resume-site) and open: **pages/left/design-skills/skills.md**. 
+Skills layout showcases your expertise levels. Example location: **pages/left/design-skills/skills.md**.
 
 ```markdown
 - name: Adobe Photoshop
   level: 8
 ```
-* **name** - your skill name
-* **level** - skill level from 1-8. For example if you specify **5** that means theme will display 5 dark circles and 3 circles will be greyed out. 
 
+  * **name**: Your skill name.
+  * **level**: Skill level from 1-8. (e.g., **5** means 5 colored circles and 3 greyed out).
 
-## Language skills - pie charts
-Language skills layout was made to easily display percentage data like language skills and other.
-Example language skills page is located in [skeleton](https://github.com/getgrav/grav-skeleton-resume-site), in: **pages/left/language-skills/langskills.md**. 
+## Language skills - Pie charts
+
+Easily display percentage data like language proficiency.
+Example location: **pages/left/language-skills/langskills.md**.
 
 ```markdown
 - name: Spanish
   level_name: Mother Language
   level: 100
 ```
-* **name** - your pie chart name 
-* **level_name** - pie chart description
-* **level** - percentage to display, ie: if you set that field to 50 then half of pie chart will be dark and half greyed out.
-* **animation** - you can animate each element. Check available animations [here](https://daneden.github.io/animate.css/).
+
+  * **level**: Percentage to display (0-100).
 
 ## Education
-This layout is designed to present your education history. Example page is located in [skeleton](https://github.com/getgrav/grav-skeleton-resume-site), in: **pages/right/education/education.md**
+
+Layout for your education history. Example location: **pages/right/education/education.md**.
 
 ```markdown
 - date: From September 2010 to September 2013.
@@ -99,58 +103,59 @@ This layout is designed to present your education history. Example page is locat
   school: Universidad Antonio de Nebrija. Madrid.
 ```
 
-* **date** - describe time when you were studying
-* **topic** - provide description of your education
-* **school** - provide place of your education
-
 ## Experience
 
-Experience layout is designed to showcase your work experience. It's created with two columns approach. One for year, one for description. Example page is located in [skeleton](https://github.com/getgrav/grav-skeleton-resume-site), in: **pages/right/experience/experience.md**
+Showcase your work experience with a timeline. Example location: **pages/right/experience/experience.md**.
 
 ```markdown
 - date: From 2013 to 2014
   role: Art Director.
-  company: Distrito 01 (d01 .es)
+  company: Creative Agency
   years: 2
   animation: fadeIn
-``` 
-* **date** - provide date
-* **role** - your role in company
-* **company** - company 
-* **years** - years to showcase in first column with enlarged font
-* **animation** - you can animate each element. Check available animations [here](https://daneden.github.io/animate.css/).
+  description: "You can now add <b>HTML</b> descriptions here!"
+```
+
+  * **years**: The big number displayed in the timeline.
+  * **description**: (New) Supports detailed description with HTML formatting.
 
 ## Recognitions
 
-Recognitions layout is designed to showcase your awards and recognitions. On left there is SVG ribbon with achieved place and amount of finalists. On the right, informations about contest. Example page is located in [skeleton](https://github.com/getgrav/grav-skeleton-resume-site), in: **pages/right/recognitions/recognitions.md**
+Showcase awards with an SVG ribbon. Example location: **pages/right/recognitions/recognitions.md**.
 
 ```markdown
-- title: Remus Logo Design.
-  desc: Internal contest. One of the three finalists.
-  place: Universidad Antonio de Nebrija. Madrid
-  position: 1-3
-  animation: fadeIn
-```    
-* **title** - contest title
-* **desc** - contest description
-* **place** - place where contest took place
-* **position** - achieved position
-* **animation** - you can animate each element. Check available animations [here](https://daneden.github.io/animate.css/).
-
-## Hobbies and Interests
-
-Interests layout is designed to show your hobbies and interests. It's approach is simple. Circle with icon and description. Example page is located in [skeleton](https://github.com/getgrav/grav-skeleton-resume-site), in: **pages/right/hobbies-and-interests/interests.md**
-
-```markdown
-- icon: camera
-  activity: Photography
+- title: Best Design Award
+  desc: International Contest
+  place: London, UK
+  position: 1
   animation: fadeIn
 ```
 
-* **icon** - select icon from around 300 bundled font icons. List is available  [here](http://zurb.com/playground/foundation-icon-fonts-3).
-* **activity** - icon description
-* **animation** - you can animate each element. Check available animations [here](https://daneden.github.io/animate.css/).
+## Hobbies and Interests
+
+Simple circles with icons. Example location: **pages/right/hobbies-and-interests/interests.md**.
+
+**Important:** This theme uses FontAwesome 7. Please use modern icon names.
+
+```markdown
+- icon: camera-retro
+  text: Photography
+  animation: fadeIn
+- icon: person-hiking
+  text: Hiking
+  animation: fadeIn
+```
+
+  * **icon**: Search for icons on [FontAwesome](https://fontawesome.com/search?o=r&m=free).
+  * **text**: Icon description.
 
 ## Footer
-Footer and it's content is located inside **partials** directory. File name is **footer.html.twig**.
 
+The footer copyright text and credit links can now be configured directly in the **Grav Admin Panel**, so you don't need to edit Twig files manually.
+
+-----
+
+### Credits
+
+  * Original Resume Theme by [Fernando Báez](https://www.behance.net/gallery/FREE-Resume-Template/15677411) & Team Grav.
+  * Nord adaptation & refactoring by [Gábor Gyöngyösi](https://github.com/megvadulthangya).

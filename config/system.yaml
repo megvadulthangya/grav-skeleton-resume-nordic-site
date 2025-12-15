@@ -2,7 +2,7 @@ home:
   alias: '/left'
 
 pages:
-  theme: resume
+  theme: resume-nordic
   process:
     markdown: true
     twig: false
