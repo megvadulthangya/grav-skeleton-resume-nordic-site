@@ -9,7 +9,12 @@ on:
       version:
         description: 'Which Grav release to use'
         required: true
-        default: '1.7.49.5' # Alapértelmezettnek beírtam a stabil verziót!
+        default: '1.7.49.5' # Ez a biztonságos, régi verzió
+      admin:
+        description: 'Create also a package with Admin?'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -34,7 +39,7 @@ jobs:
         mv grav webroot
         rm grav.zip
 
-    # 2. A TRÜKK: --no-audit kapcsoló hozzáadása!
+    # 2. A TRÜKK: --no-audit kapcsoló + 8.1 Hazugság
     - name: Downgrade to PHP 8.1 Compatibility
       run: |
         cd webroot
@@ -48,6 +53,7 @@ jobs:
 
     - name: Overlay Skeleton Files
       run: |
+        echo "📂 Copying skeleton files..."
         for dir in pages themes plugins config assets data accounts; do
           if [ -d "$dir" ]; then
             cp -r "$dir" webroot/user/
@@ -65,34 +71,43 @@ jobs:
     - name: Install Standard Plugins
       run: |
         cd webroot
-        # A GPM telepítésnél is fontos, hogy a rendszer már "hazudja" a verziót
         bin/gpm install error problems -f -y
 
     - name: Cleanup
       run: |
         cd webroot
+        echo "🧹 Cleaning up..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
 
-    # CSOMAG 1
+    # -----------------------------------------------------------
+    # CSOMAG 1 (Admin nélkül)
+    # -----------------------------------------------------------
     - name: Create Standard ZIP
       run: |
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
+    # -----------------------------------------------------------
     # CSOMAG 2 (Admin) + JAVÍTÁS ÚJRA
+    # Csak akkor fut, ha be van pipálva!
+    # -----------------------------------------------------------
     - name: Install Admin & Re-Downgrade
+      if: ${{ inputs.admin == true }}
       run: |
         cd webroot
+        echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
         
         # Admin után újra futtatjuk a biztonsági ellenőrzés nélküli frissítést
+        echo "🔧 Re-applying PHP 8.1 config after Admin install..."
         composer config platform.php 8.1.0
         composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
 
     - name: Create Admin ZIP
+      if: ${{ inputs.admin == true }}
       run: |
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
