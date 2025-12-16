@@ -1,9 +1,10 @@
-name: Build Skeleton Package (Clean)
+name: TEST Build Skeleton Package
 on:
   workflow_dispatch:
+    # ITT VANNAK A MEZŐK, AMIKET KÉRTÉL!
     inputs:
       tag:
-        description: 'Release Tag (pl. v1.0.0)'
+        description: 'Target tag for re-upload (pl. v1.0.0)'
         required: true
         default: 'v1.0.0'
       version:
@@ -21,29 +22,26 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Kód letöltése
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 2. PHP 8.3 (A szabvány)
-    # Ez a tiszta verzió, hackelés nélkül.
-    - name: Setup PHP
+    # 1. PHP 8.1 BEÁLLÍTÁSA (A XAMPP Barát verzió)
+    - name: Setup PHP 8.1
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3' 
+        php-version: '8.1'
         extensions: mbstring, intl, gd, xml, zip
+        tools: composer:v2
 
-    # 3. Grav Core letöltése (DINAMIKUS VERZIÓ!)
-    # Azt tölti le, amit a szövegdobozba írtál (alapból latest)
+    # 2. Grav letöltése (A MEGADOTT VERZIÓT HASZNÁLJA!)
     - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading Grav Core version: ${{ inputs.version }}..."
+        echo "⬇️ Downloading Grav version: ${{ inputs.version }}..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/${{ inputs.version }}
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
 
-    # 4. A Te fájljaid bemásolása
     - name: Overlay Skeleton Files
       run: |
         echo "📂 Copying skeleton files into Grav..."
@@ -56,20 +54,17 @@ jobs:
             cp .dependencies webroot/
         fi
 
-    # 5. Nord Téma telepítése
-    - name: Install Nord Theme
+    - name: Install Nord Theme Manually
       run: |
         echo "🎨 Cloning Nord Resume Theme..."
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
         rm -rf webroot/user/themes/resume-nordic/.git
 
-    # 6. Pluginok telepítése
     - name: Install Standard Plugins
       run: |
         cd webroot
         bin/gpm install error problems -f -y
 
-    # 7. Takarítás
     - name: Cleanup
       run: |
         cd webroot
@@ -79,7 +74,7 @@ jobs:
         rm -rf user/themes/quark
 
     # -----------------------------------------------------------
-    # CSOMAG 1: STANDARD (Admin nélkül)
+    # CSOMAG 1: SIMA (MINDIG LEFUT)
     # -----------------------------------------------------------
     - name: Create Standard ZIP
       run: |
@@ -87,7 +82,7 @@ jobs:
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
     # -----------------------------------------------------------
-    # CSOMAG 2: ADMINOS (Csak ha be van pipálva!)
+    # CSOMAG 2: ADMINOS (CSAK HA BEPIPÁLTAD!)
     # -----------------------------------------------------------
     - name: Install Admin Plugin
       if: ${{ inputs.admin == true }}
@@ -103,7 +98,9 @@ jobs:
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
-    # 8. Feltöltés (A csillag miatt feltölti azt is, ha 1 van, azt is, ha 2)
+    # -----------------------------------------------------------
+    # FELTÖLTÉS (MINDENT, AMIT TALÁL)
+    # -----------------------------------------------------------
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:

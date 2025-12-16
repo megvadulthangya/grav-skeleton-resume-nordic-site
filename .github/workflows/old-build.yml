@@ -1,4 +1,4 @@
-name: Build Skeleton
+name: Build Skeleton OLD/Does not work now.
 
 on:
   release:
