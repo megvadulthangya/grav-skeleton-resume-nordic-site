@@ -1,0 +1,178 @@
+# =============================================================================
+#  GRAV SKELETON BUILDER - UNIFIED SMART EDITION 🧠✨
+#  (a.k.a. The "Holy Grail" of GitHub Actions)
+# =============================================================================
+#
+#  Description:
+#    This workflow automatically builds Grav CMS skeleton packages.
+#    It features a "Smart Dual-Mode" logic to handle PHP version conflicts
+#    that shouldn't exist, but do.
+#
+#  The Problem Solved:
+#    Modern Grav (1.8+ / Beta) demands PHP 8.3 like a diva.
+#    Stable Grav (1.7.x) is chill but building it on modern servers creates
+#    a "Dependency Hell" that breaks local XAMPP environments (8.1/8.2).
+#
+#  The Solution:
+#    1. STRICT MODE: If 'latest' is requested -> Build normally (PHP 8.3).
+#    2. LEGACY MODE: If a specific version is requested -> We lie to Composer.
+#       We force "platform config 8.1" and disable security audits (--no-audit)
+#       to allow older, compatible dependencies to install without exploding.
+#
+#  Credits:
+#    Architect:   Gyöngyösi Gábor / @megvadulthangya
+#    Co-Pilot:    Google Gemini (holding the flashlight 🔦)
+#    Time spent:  ~6 hours of "Blood, Sweat & Tears" vs. Dependency Hell & XAMPP 😅
+#    Powered by:  Caffeine, denial, and 47 failed build attempts.
+#
+#  WARNING:
+#    Do not touch the logic unless you want to summon the demons of Composer again.
+# =============================================================================
+name: Build Skeleton (Unified Smart)
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag (pl. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      version:
+        description: 'Grav Version (latest = Beta/Strict | 1.7.49.5 = Legacy/Compat)'
+        required: true
+        default: 'latest'
+      admin:
+        description: 'Create also a package with Admin?'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Kód letöltése
+    - name: Checkout Skeleton Code
+      uses: actions/checkout@v4
+
+    # 2. PHP 8.3 (Mindig modern környezetben építünk)
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3' 
+        extensions: mbstring, intl, gd, xml, zip
+
+    # 3. Grav letöltése
+    - name: Download Grav Core
+      run: |
+        echo "⬇️ Downloading Grav Core version: ${{ inputs.version }}..."
+        wget -q -O grav.zip https://getgrav.org/download/core/grav/${{ inputs.version }}
+        unzip -q grav.zip
+        mv grav webroot
+        rm grav.zip
+
+    # 4. A NAGY VARÁZSLAT: Valódi verzió kinyerése a fájlokból! 🪄
+    # Ez olvassa ki a defines.php-ból a GRAV_VERSION konstanst.
+    - name: Detect Real Grav Version
+      id: get_version
+      run: |
+        cd webroot
+        # Kikeressük a sort, ami így kezdődik: define('GRAV_VERSION'
+        # Majd a ' jelek mentén feldaraboljuk, és kivesszük a 4. elemet (maga a szám)
+        REAL_VERSION=$(grep "define('GRAV_VERSION'" system/defines.php | cut -d "'" -f 4)
+        
+        echo "🔍 Detected Real Grav Version: $REAL_VERSION"
+        
+        # Elmentjük környezeti változónak, hogy később használhassuk a fájlnévben
+        echo "GRAV_REAL_VER=$REAL_VERSION" >> $GITHUB_ENV
+
+    # 5. LEGACY MÓD (Csak akkor fut, ha NEM 'latest' a kérés)
+    # Ha konkrét verziót adtál meg (pl 1.7), akkor feltételezzük, hogy régi kell -> Hackelés ON
+    - name: Apply Legacy Hacks (if needed)
+      if: ${{ inputs.version != 'latest' }}
+      run: |
+        cd webroot
+        echo "⚠️ Legacy version detected! Applying compatibility hacks..."
+        
+        # 1. Hazudjuk azt, hogy PHP 8.1 vagyunk (XAMPP barát)
+        composer config platform.php 8.1.0
+        
+        # 2. Frissítés biztonsági ellenőrzés NÉLKÜL (--no-audit)
+        composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
+
+    - name: Overlay Skeleton Files
+      run: |
+        echo "📂 Copying skeleton files..."
+        for dir in pages themes plugins config assets data accounts; do
+          if [ -d "$dir" ]; then
+            cp -r "$dir" webroot/user/
+          fi
+        done
+        if [ -f ".dependencies" ]; then
+            cp .dependencies webroot/
+        fi
+
+    - name: Install Nord Theme
+      run: |
+        git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
+        rm -rf webroot/user/themes/resume-nordic/.git
+
+    - name: Install Standard Plugins
+      run: |
+        cd webroot
+        bin/gpm install error problems -f -y
+
+    - name: Cleanup
+      run: |
+        cd webroot
+        rm -rf cache/* logs/* tmp/* .git .github
+        find . -name ".git" -type d -exec rm -rf {} +
+        rm -rf user/themes/quark
+
+    # -----------------------------------------------------------
+    # CSOMAG 1 (Standard) - DINAMIKUS NÉVVEL
+    # -----------------------------------------------------------
+    - name: Create Standard ZIP
+      run: |
+        cd webroot
+        # Itt használjuk a kinyert verziót a fájlnévben! ${{ env.GRAV_REAL_VER }}
+        ZIP_NAME="../grav-skeleton-resume-nordic-site-${{ env.GRAV_REAL_VER }}.zip"
+        echo "📦 Packaging: $ZIP_NAME"
+        zip -r -q "$ZIP_NAME" .
+
+    # -----------------------------------------------------------
+    # CSOMAG 2 (Admin)
+    # -----------------------------------------------------------
+    - name: Install Admin & Re-apply Hacks
+      if: ${{ inputs.admin == true }}
+      run: |
+        cd webroot
+        echo "➕ Installing Admin Panel..."
+        bin/gpm install admin -f -y
+        rm -rf cache/* logs/* tmp/*
+        
+        # Ha Legacy módban vagyunk, az Admin install után újra futtatni kell a hack-et!
+        if [ "${{ inputs.version }}" != "latest" ]; then
+            echo "⚠️ Re-applying Legacy Hacks after Admin install..."
+            composer config platform.php 8.1.0
+            composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
+        fi
+
+    - name: Create Admin ZIP
+      if: ${{ inputs.admin == true }}
+      run: |
+        cd webroot
+        # Itt is dinamikus a név
+        ZIP_NAME="../grav-skeleton-resume-nordic-site-${{ env.GRAV_REAL_VER }}+admin.zip"
+        echo "📦 Packaging: $ZIP_NAME"
+        zip -r -q "$ZIP_NAME" .
+
+    # 8. Feltöltés (Minden zipet feltölt, amit talál)
+    - name: Upload to Release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ inputs.tag }}
+        file: grav-skeleton-resume-nordic-site*.zip
+        overwrite: true
+        file_glob: true
