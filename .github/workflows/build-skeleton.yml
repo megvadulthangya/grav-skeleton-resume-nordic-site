@@ -26,18 +26,18 @@ jobs:
       uses: actions/checkout@v4
 
     # 2. PHP 8.3 (A szabvány)
-    # Ez a tiszta verzió, hackelés nélkül.
+    # Ez a modern, gyors, hivatalos út.
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3' 
         extensions: mbstring, intl, gd, xml, zip
 
-    # 3. Grav Core letöltése (DINAMIKUS VERZIÓ!)
-    # Azt tölti le, amit a szövegdobozba írtál (alapból latest)
+    # 3. Grav Core letöltése (DINAMIKUS!)
+    # Azt a verziót szedi le, amit a szövegdobozba írsz.
     - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading Grav Core version: ${{ inputs.version }}..."
+        echo "⬇️ Downloading Grav version: ${{ inputs.version }}..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/${{ inputs.version }}
         unzip -q grav.zip
         mv grav webroot
@@ -76,10 +76,13 @@ jobs:
         echo "🧹 Cleaning up..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
+        
+        # A Quark témát kiszedjük, hogy tiszta legyen a csomag
         rm -rf user/themes/quark
 
     # -----------------------------------------------------------
     # CSOMAG 1: STANDARD (Admin nélkül)
+    # Mindig elkészül.
     # -----------------------------------------------------------
     - name: Create Standard ZIP
       run: |
@@ -87,7 +90,8 @@ jobs:
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
     # -----------------------------------------------------------
-    # CSOMAG 2: ADMINOS (Csak ha be van pipálva!)
+    # CSOMAG 2: ADMINOS (Választható)
+    # Csak akkor készül el, ha a checkbox be van pipálva.
     # -----------------------------------------------------------
     - name: Install Admin Plugin
       if: ${{ inputs.admin == true }}
@@ -103,7 +107,7 @@ jobs:
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
-    # 8. Feltöltés (A csillag miatt feltölti azt is, ha 1 van, azt is, ha 2)
+    # 8. Feltöltés (A csillag miatt feltölti mindkettőt, ha van)
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:

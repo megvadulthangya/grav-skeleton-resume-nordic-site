@@ -1,21 +1,16 @@
-name: TEST Build Skeleton Package
+name: Build Skeleton Package (Legacy/XAMPP)
 on:
   workflow_dispatch:
-    # ITT VANNAK A MEZŐK, AMIKET KÉRTÉL!
     inputs:
       tag:
-        description: 'Target tag for re-upload (pl. v1.0.0)'
+        description: 'Release Tag (pl. v1.0.0)'
         required: true
         default: 'v1.0.0'
+      # Itt hagyjuk a latest-et, mert meg tudjuk oldani okosba'!
       version:
-        description: 'Which Grav release to use (pl. latest vagy 1.7.46)'
+        description: 'Which Grav release to use'
         required: true
         default: 'latest'
-      admin:
-        description: 'Create also a package with Admin?'
-        required: true
-        type: boolean
-        default: true
 
 jobs:
   build:
@@ -25,26 +20,37 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. PHP 8.1 BEÁLLÍTÁSA (A XAMPP Barát verzió)
-    - name: Setup PHP 8.1
+    # 1. TRÜKK: PHP 8.3-at használunk az ÉPÍTÉSHEZ!
+    # Így nem hasal el a rendszer a letöltés után azonnal.
+    - name: Setup PHP (Build Environment)
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: '8.3' 
         extensions: mbstring, intl, gd, xml, zip
-        tools: composer:v2
 
-    # 2. Grav letöltése (A MEGADOTT VERZIÓT HASZNÁLJA!)
     - name: Download Grav Core
       run: |
-        echo "⬇️ Downloading Grav version: ${{ inputs.version }}..."
+        echo "⬇️ Downloading Grav Core version: ${{ inputs.version }}..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/${{ inputs.version }}
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
 
+    # 2. TRÜKK: "DOWNGRADE" - Átírjuk a követelményeket 8.1-re!
+    # Ez a legfontosabb lépés. Itt mondjuk meg neki, hogy legyen kedves 8.1-en is futni.
+    - name: Downgrade to PHP 8.1 Compatibility
+      run: |
+        cd webroot
+        echo "📉 Configuring Composer to target PHP 8.1..."
+        
+        # Beállítjuk a kompatibilitást
+        composer config platform.php 8.1.0
+        
+        # Regeneráljuk az ellenőrző fájlokat (ez írja át a 8.3-at 8.1-re!)
+        composer update --no-dev --ignore-platform-reqs
+
     - name: Overlay Skeleton Files
       run: |
-        echo "📂 Copying skeleton files into Grav..."
         for dir in pages themes plugins config assets data accounts; do
           if [ -d "$dir" ]; then
             cp -r "$dir" webroot/user/
@@ -56,25 +62,25 @@ jobs:
 
     - name: Install Nord Theme Manually
       run: |
-        echo "🎨 Cloning Nord Resume Theme..."
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
         rm -rf webroot/user/themes/resume-nordic/.git
 
     - name: Install Standard Plugins
       run: |
         cd webroot
+        # Most már a GPM is futni fog, mert a rendszer 8.3 (tehát fut),
+        # de a config már 8.1-re van állítva.
         bin/gpm install error problems -f -y
 
     - name: Cleanup
       run: |
         cd webroot
-        echo "🧹 Cleaning up..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
 
     # -----------------------------------------------------------
-    # CSOMAG 1: SIMA (MINDIG LEFUT)
+    # CSOMAG 1
     # -----------------------------------------------------------
     - name: Create Standard ZIP
       run: |
@@ -82,25 +88,24 @@ jobs:
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
     # -----------------------------------------------------------
-    # CSOMAG 2: ADMINOS (CSAK HA BEPIPÁLTAD!)
+    # CSOMAG 2 (Admin) + ÚJRA JAVÍTÁS
     # -----------------------------------------------------------
-    - name: Install Admin Plugin
-      if: ${{ inputs.admin == true }}
+    - name: Install Admin & Re-Downgrade
       run: |
         cd webroot
-        echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
+        
+        # Az Admin telepítése visszarakhatta a 8.3-as követelményt.
+        # ÚJRA lefuttatjuk a downgrade-et, biztos ami biztos!
+        composer config platform.php 8.1.0
+        composer update --no-dev --ignore-platform-reqs
 
     - name: Create Admin ZIP
-      if: ${{ inputs.admin == true }}
       run: |
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
-    # -----------------------------------------------------------
-    # FELTÖLTÉS (MINDENT, AMIT TALÁL)
-    # -----------------------------------------------------------
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
