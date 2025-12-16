@@ -2,6 +2,12 @@
 
 ![Nord Resume](assets/readme_1.png)
 
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-View_Site-5E81AC?style=for-the-badge&logo=google-chrome&logoColor=white)](https://nordic-skeleton.gshoots.hu/)
+
+</div>
+
 **Nord Resume** is a modern, privacy-focused adaptation of the classic Grav Resume theme. It has been completely overhauled with the [Nord color palette](https://www.nordtheme.com/), automatic Dark/Light mode, and FontAwesome 7 icons.
 
 # Features
