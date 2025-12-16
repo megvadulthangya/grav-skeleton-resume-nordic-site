@@ -165,3 +165,13 @@ The footer copyright text and credit links can now be configured directly in the
 
   * Original Resume Theme by [Fernando Báez](https://www.behance.net/gallery/FREE-Resume-Template/15677411) & Team Grav.
   * Nord adaptation & refactoring by [Gábor Gyöngyösi](https://github.com/megvadulthangya).
+---
+
+<div align="center">
+
+**Is it cold out there?** ❄️  
+If this skeleton saved you hours of debugging dependency hell, consider warming me up with a coffee! ☕
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/rohambili)
+
+</div>
