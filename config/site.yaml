@@ -18,7 +18,7 @@ routes: null
 blog:
   route: /blog
 description: 'Senior Systems Architect'
-website: "nordic-skeleton.demo"
+website: "https://github.com/megvadulthangya/grav-skeleton-resume-nordic-site"
 address:
   - line: '123 Glacier Avenue'
   - line: 'Arctic Circle,'
