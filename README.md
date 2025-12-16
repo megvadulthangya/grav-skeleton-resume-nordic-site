@@ -1,6 +1,6 @@
 # Nord Resume Skeleton for Grav
 
-![Nord Resume](assets/readme_1.png)
+![Nord Resume](assets/readme_1.jpg)
 
 <div align="center">
 
