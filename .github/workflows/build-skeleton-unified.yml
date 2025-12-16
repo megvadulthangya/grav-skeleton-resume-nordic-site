@@ -37,9 +37,9 @@ on:
         required: true
         default: 'v1.0.0'
       version:
-        description: 'Grav Version (latest = Beta/Strict | 1.7.49.5 = Legacy/Compat)'
+        description: 'Grav Version (latest = Beta | 1.7.49.5 = Stable/XAMPP)'
         required: true
-        default: 'latest'
+        default: '1.7.49.5' # Alapból a stabil, XAMPP-barát verzió
       admin:
         description: 'Create also a package with Admin?'
         required: true
@@ -51,18 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Kód letöltése
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 2. PHP 8.3 (Mindig modern környezetben építünk)
+    # 1. PHP 8.3 (Mindig modern környezet)
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3' 
         extensions: mbstring, intl, gd, xml, zip
 
-    # 3. Grav letöltése
     - name: Download Grav Core
       run: |
         echo "⬇️ Downloading Grav Core version: ${{ inputs.version }}..."
@@ -71,34 +69,29 @@ jobs:
         mv grav webroot
         rm grav.zip
 
-    # 4. A NAGY VARÁZSLAT: Valódi verzió kinyerése a fájlokból! 🪄
-    # Ez olvassa ki a defines.php-ból a GRAV_VERSION konstanst.
+    # 2. Verzió detektálása a fájlnévhez
     - name: Detect Real Grav Version
       id: get_version
       run: |
         cd webroot
-        # Kikeressük a sort, ami így kezdődik: define('GRAV_VERSION'
-        # Majd a ' jelek mentén feldaraboljuk, és kivesszük a 4. elemet (maga a szám)
         REAL_VERSION=$(grep "define('GRAV_VERSION'" system/defines.php | cut -d "'" -f 4)
-        
         echo "🔍 Detected Real Grav Version: $REAL_VERSION"
-        
-        # Elmentjük környezeti változónak, hogy később használhassuk a fájlnévben
         echo "GRAV_REAL_VER=$REAL_VERSION" >> $GITHUB_ENV
 
-    # 5. LEGACY MÓD (Csak akkor fut, ha NEM 'latest' a kérés)
-    # Ha konkrét verziót adtál meg (pl 1.7), akkor feltételezzük, hogy régi kell -> Hackelés ON
+    # 3. LEGACY MÓD: DUMP-AUTOLOAD (A MEGOLDÁS!) 🧠
+    # Nem update-elünk (mert az hibát dob a biztonság miatt), csak regenerálunk!
     - name: Apply Legacy Hacks (if needed)
       if: ${{ inputs.version != 'latest' }}
       run: |
         cd webroot
-        echo "⚠️ Legacy version detected! Applying compatibility hacks..."
+        echo "⚠️ Legacy version detected! Regenerating autoloader for PHP 8.1..."
         
-        # 1. Hazudjuk azt, hogy PHP 8.1 vagyunk (XAMPP barát)
+        # 1. Beállítjuk a configot 8.1-re
         composer config platform.php 8.1.0
         
-        # 2. Frissítés biztonsági ellenőrzés NÉLKÜL (--no-audit)
-        composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
+        # 2. Regeneráljuk az ellenőrző fájlokat a meglévő csomagokból
+        # Ez NEM megy ki a netre, NEM ellenőriz biztonságot, csak átírja a verziót!
+        composer dump-autoload --ignore-platform-reqs
 
     - name: Overlay Skeleton Files
       run: |
@@ -120,6 +113,7 @@ jobs:
     - name: Install Standard Plugins
       run: |
         cd webroot
+        # A GPM install működni fog, mert a rendszer maga 8.3-as
         bin/gpm install error problems -f -y
 
     - name: Cleanup
@@ -130,12 +124,11 @@ jobs:
         rm -rf user/themes/quark
 
     # -----------------------------------------------------------
-    # CSOMAG 1 (Standard) - DINAMIKUS NÉVVEL
+    # CSOMAG 1 (Standard)
     # -----------------------------------------------------------
     - name: Create Standard ZIP
       run: |
         cd webroot
-        # Itt használjuk a kinyert verziót a fájlnévben! ${{ env.GRAV_REAL_VER }}
         ZIP_NAME="../grav-skeleton-resume-nordic-site-${{ env.GRAV_REAL_VER }}.zip"
         echo "📦 Packaging: $ZIP_NAME"
         zip -r -q "$ZIP_NAME" .
@@ -143,7 +136,7 @@ jobs:
     # -----------------------------------------------------------
     # CSOMAG 2 (Admin)
     # -----------------------------------------------------------
-    - name: Install Admin & Re-apply Hacks
+    - name: Install Admin & Re-Dump
       if: ${{ inputs.admin == true }}
       run: |
         cd webroot
@@ -151,23 +144,21 @@ jobs:
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
         
-        # Ha Legacy módban vagyunk, az Admin install után újra futtatni kell a hack-et!
+        # Ha Legacy mód, újra kell generálni az autoloadert az Admin után is!
         if [ "${{ inputs.version }}" != "latest" ]; then
-            echo "⚠️ Re-applying Legacy Hacks after Admin install..."
+            echo "⚠️ Regenerating autoloader after Admin install..."
             composer config platform.php 8.1.0
-            composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
+            composer dump-autoload --ignore-platform-reqs
         fi
 
     - name: Create Admin ZIP
       if: ${{ inputs.admin == true }}
       run: |
         cd webroot
-        # Itt is dinamikus a név
         ZIP_NAME="../grav-skeleton-resume-nordic-site-${{ env.GRAV_REAL_VER }}+admin.zip"
         echo "📦 Packaging: $ZIP_NAME"
         zip -r -q "$ZIP_NAME" .
 
-    # 8. Feltöltés (Minden zipet feltölt, amit talál)
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
