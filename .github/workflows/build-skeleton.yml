@@ -12,25 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    # 1. Kód letöltése
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. PHP 8.3 a szerveren (hogy a letöltések gyorsak legyenek)
+    # 2. PHP 8.3 (A szabvány)
+    # Nem mókolunk verziókkal. Azt adjuk a Gravnak, ami kell neki.
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3' 
         extensions: mbstring, intl, gd, xml, zip
 
+    # 3. Grav Core letöltése
     - name: Download Grav Core
       run: |
+        echo "⬇️ Downloading Grav Core..."
         wget -q -O grav.zip https://getgrav.org/download/core/grav/latest
         unzip -q grav.zip
         mv grav webroot
         rm grav.zip
 
+    # 4. A Te fájljaid bemásolása
     - name: Overlay Skeleton Files
       run: |
+        echo "📂 Copying skeleton files into Grav..."
         for dir in pages themes plugins config assets data accounts; do
           if [ -d "$dir" ]; then
             cp -r "$dir" webroot/user/
@@ -40,58 +46,55 @@ jobs:
             cp .dependencies webroot/
         fi
 
-    - name: Install Nord Theme Manually
+    # 5. Nord Téma telepítése (Tiszta Git Clone)
+    - name: Install Nord Theme
       run: |
+        echo "🎨 Cloning Nord Resume Theme..."
         git clone -b develop https://github.com/megvadulthangya/grav-theme-resume-nordic webroot/user/themes/resume-nordic
         rm -rf webroot/user/themes/resume-nordic/.git
 
+    # 6. Pluginok telepítése (GPM-mel, ahogy kell)
     - name: Install Standard Plugins
       run: |
         cd webroot
         bin/gpm install error problems -f -y
 
+    # 7. Takarítás (Csak a szemetet és a Quarkot vesszük ki)
     - name: Cleanup
       run: |
         cd webroot
+        echo "🧹 Cleaning up..."
         rm -rf cache/* logs/* tmp/* .git .github
         find . -name ".git" -type d -exec rm -rf {} +
+        
+        # A Quarkot azért kivesszük, mert minek foglalja a helyet?
         rm -rf user/themes/quark
 
     # -----------------------------------------------------------
-    # A MEGOLDÁS (Hivatalos Composer Config)
+    # CSOMAG 1: STANDARD (Admin nélkül)
     # -----------------------------------------------------------
-    - name: Configure PHP 8.1 Compatibility
-      run: |
-        cd webroot
-        # Ez a hivatalos parancs. Nem hack.
-        # Beállítja, hogy a csomag 8.1-es PHP-t kérjen.
-        composer config platform.php 8.1.0
-        composer update --ignore-platform-reqs --no-dev
-
     - name: Create Standard ZIP
       run: |
         cd webroot
+        # Sima, egyszerű zipelés. Semmi extra.
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
     # -----------------------------------------------------------
-    # ADMIN CSOMAG
+    # CSOMAG 2: ADMINOS (Adminnal)
     # -----------------------------------------------------------
-    - name: Install Admin Plugin & Re-Configure
+    - name: Install Admin Plugin
       run: |
         cd webroot
+        echo "➕ Installing Admin Panel..."
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
-        
-        # Az Admin telepítése után újra beállítjuk a 8.1-et
-        # Hogy biztosan megmaradjon a kompatibilitás
-        composer config platform.php 8.1.0
-        composer update --ignore-platform-reqs --no-dev
 
     - name: Create Admin ZIP
       run: |
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site+admin-${{ inputs.tag }}.zip .
 
+    # 8. Feltöltés
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
