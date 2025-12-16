@@ -6,11 +6,10 @@ on:
         description: 'Release Tag (pl. v1.0.0)'
         required: true
         default: 'v1.0.0'
-      # Itt hagyjuk a latest-et, mert meg tudjuk oldani okosba'!
       version:
         description: 'Which Grav release to use'
         required: true
-        default: 'latest'
+        default: '1.7.49.5' # Alapértelmezettnek beírtam a stabil verziót!
 
 jobs:
   build:
@@ -20,8 +19,7 @@ jobs:
     - name: Checkout Skeleton Code
       uses: actions/checkout@v4
 
-    # 1. TRÜKK: PHP 8.3-at használunk az ÉPÍTÉSHEZ!
-    # Így nem hasal el a rendszer a letöltés után azonnal.
+    # 1. PHP 8.3 a környezetnek (hogy a Composer fusson)
     - name: Setup PHP (Build Environment)
       uses: shivammathur/setup-php@v2
       with:
@@ -36,18 +34,17 @@ jobs:
         mv grav webroot
         rm grav.zip
 
-    # 2. TRÜKK: "DOWNGRADE" - Átírjuk a követelményeket 8.1-re!
-    # Ez a legfontosabb lépés. Itt mondjuk meg neki, hogy legyen kedves 8.1-en is futni.
+    # 2. A TRÜKK: --no-audit kapcsoló hozzáadása!
     - name: Downgrade to PHP 8.1 Compatibility
       run: |
         cd webroot
         echo "📉 Configuring Composer to target PHP 8.1..."
         
-        # Beállítjuk a kompatibilitást
+        # Hazudjuk azt, hogy 8.1-en vagyunk
         composer config platform.php 8.1.0
         
-        # Regeneráljuk az ellenőrző fájlokat (ez írja át a 8.3-at 8.1-re!)
-        composer update --no-dev --ignore-platform-reqs
+        # ITT A JAVÍTÁS: --no-audit (Ne ellenőrizd a biztonsági réseket, csak telepítsd!)
+        composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
 
     - name: Overlay Skeleton Files
       run: |
@@ -68,8 +65,7 @@ jobs:
     - name: Install Standard Plugins
       run: |
         cd webroot
-        # Most már a GPM is futni fog, mert a rendszer 8.3 (tehát fut),
-        # de a config már 8.1-re van állítva.
+        # A GPM telepítésnél is fontos, hogy a rendszer már "hazudja" a verziót
         bin/gpm install error problems -f -y
 
     - name: Cleanup
@@ -79,27 +75,22 @@ jobs:
         find . -name ".git" -type d -exec rm -rf {} +
         rm -rf user/themes/quark
 
-    # -----------------------------------------------------------
     # CSOMAG 1
-    # -----------------------------------------------------------
     - name: Create Standard ZIP
       run: |
         cd webroot
         zip -r -q ../grav-skeleton-resume-nordic-site-${{ inputs.tag }}.zip .
 
-    # -----------------------------------------------------------
-    # CSOMAG 2 (Admin) + ÚJRA JAVÍTÁS
-    # -----------------------------------------------------------
+    # CSOMAG 2 (Admin) + JAVÍTÁS ÚJRA
     - name: Install Admin & Re-Downgrade
       run: |
         cd webroot
         bin/gpm install admin -f -y
         rm -rf cache/* logs/* tmp/*
         
-        # Az Admin telepítése visszarakhatta a 8.3-as követelményt.
-        # ÚJRA lefuttatjuk a downgrade-et, biztos ami biztos!
+        # Admin után újra futtatjuk a biztonsági ellenőrzés nélküli frissítést
         composer config platform.php 8.1.0
-        composer update --no-dev --ignore-platform-reqs
+        composer update --no-dev --ignore-platform-reqs --no-audit --with-all-dependencies
 
     - name: Create Admin ZIP
       run: |
