@@ -23,7 +23,21 @@ address:
   - line: '123 Glacier Avenue'
   - line: 'Arctic Circle,'
   - line: 'Svalbard, 9170'
+
+# NEW: Advanced Contact Structure
+# You can now use 'text', 'url', and 'icon' (FontAwesome) for custom links.
 contact:
   - line: "lars.nordmann@example.com"
   - line: "+1 555-0199"
-  - line: "@lars_nord_demo"
+  # Example of the new structure:
+  - text: "@lars_nord_demo"
+    url: "https://twitter.com/lars_nord_demo"
+    icon: "brands fa-twitter"
+    target: "_blank"
+
+# -------------------------------------------------------------------
+# MULTI-LANGUAGE SITE CONFIG
+# If you enabled languages in system.yaml, you can create localized configs:
+# Create 'site.fr.yaml' for French overrides (e.g., title, description).
+# -------------------------------------------------------------------
+

@@ -9,8 +9,24 @@ pages:
   markdown:
     extra: true
 
+# -------------------------------------------------------------------
+# OPTIONAL: MULTI-LANGUAGE SUPPORT
+# To enable multi-language (e.g., English & French), uncomment the block below.
+# Then create content files like: experience.en.md and experience.fr.md
+# -------------------------------------------------------------------
+# languages:
+#   supported:
+#     - en
+#     - fr
+#   default_lang: en
+#   include_default_lang: false
+#   translations: true
+#   http_accept_language: true
+#   session_store_active: true
+# -------------------------------------------------------------------
+
 cache:
-  enabled: false
+  enabled: true 
   check:
     method: file
   driver: auto
